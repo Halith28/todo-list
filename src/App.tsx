@@ -1,65 +1,15 @@
 import React, { useRef, useState } from 'react';
 import './App.css';
-
-type Todo = {
-  id: number;
-  task: string;
-  isCompleted: boolean;
-};
-
-type daysKey = {
-  [key: string]: string | number;
-};
+import TodoForm from './components/TodoForm';
+import TodoFooter from './components/Footer';
+import TodoList from './components/TodoList';
+import { TodoType } from './App.type';
+import TodoHeader from './components/TodoHeader';
+import { days, monthNames } from './App.constants';
 
 function App() {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todos, setTodos] = useState<TodoType[]>([]);
   const [task, setTask] = useState<string>('');
-
-  const date: Date = new Date();
-
-  function ending(date: number | boolean): string {
-    switch (date) {
-      case date === 1 || date === 21 || date === 31:
-        return 'st';
-      case date === 2 || date === 22:
-        return 'nd';
-      case date === 3 || date === 23:
-        return 'rd';
-      default:
-        return 'th';
-    }
-  }
-
-  const getEnding = ending(date.getDate());
-
-  const days: daysKey = {
-    0: 'Sunday',
-    1: 'Monday',
-    2: 'Tuesday',
-    3: 'Wednesday',
-    4: 'Thursday',
-    5: 'Friday',
-    6: 'Saturday',
-  };
-
-  const monthNames: string[] = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-  const day = `${
-    days[date.getDay()]
-  }, ${date.getDate()}${getEnding}`.toString();
-  const month = monthNames[date.getMonth()];
 
   const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTask(event.target.value);
@@ -75,7 +25,7 @@ function App() {
     }
 
     // create a new todo
-    const todo: Todo = {
+    const todo: TodoType = {
       id: Date.now(),
       task: task,
       isCompleted: false,
@@ -88,7 +38,7 @@ function App() {
     setTask('');
   };
 
-  const handleChangeChecked = (todo: Todo) => {
+  const handleChangeChecked = (todo: TodoType) => {
     // index of the todo
     const index = todos.indexOf(todo);
 
@@ -126,7 +76,7 @@ function App() {
     dragOverItem.current = position;
   };
 
-  const drop = () => {
+  const dropItem = () => {
     const copyListItems = [...todos];
     const dragItemContent = copyListItems[dragItem.current];
     copyListItems.splice(dragItem.current, 1);
@@ -136,73 +86,46 @@ function App() {
     setTodos(copyListItems);
   };
 
+  const date: Date = new Date();
+
+  function ending(date: number | boolean): string {
+    switch (date) {
+      case date === 1 || date === 21 || date === 31:
+        return 'st';
+      case date === 2 || date === 22:
+        return 'nd';
+      case date === 3 || date === 23:
+        return 'rd';
+      default:
+        return 'th';
+    }
+  }
+
+  const getEnding = ending(date.getDate());
+
+  const day = `${
+    days[date.getDay()]
+  }, ${date.getDate()}${getEnding}`.toString();
+  const month = monthNames[date.getMonth()];
+
   return (
     <div className="container">
       <div className="box">
-        <h1>
-          Today's schedule{' '}
-          <small className="date_style">
-            {day} {month}
-          </small>
-        </h1>
-        <form onSubmit={handleFormSubmit}>
-          <input
-            type="text"
-            name="task"
-            value={task}
-            onChange={handleInput}
-            className="form-input"
-          />
-          <button type="submit" className="form-button">
-            Add Todo
-          </button>
-        </form>
-        <ul className="list">
-          {todos.length ? (
-            todos.map((todo, index) => (
-              <div
-                className="todo-list"
-                key={index}
-                onDragStart={() => dragStart(index)}
-                onDragEnter={() => dragEnter(index)}
-                onDragEnd={drop}
-                onDragOver={(e) => e.preventDefault()}
-                draggable
-              >
-                <input
-                  className="checkbox"
-                  type="checkbox"
-                  checked={todo.isCompleted}
-                  onChange={() => handleChangeChecked(todo)}
-                />
-                <div
-                  className={
-                    todo.isCompleted
-                      ? `todo-wrapper completed_todo`
-                      : `todo-wrapper`
-                  }
-                >
-                  <span>{todo.task}</span>
-                  <i
-                    className="fas fa-trash"
-                    onClick={() => handleDelete(todo.id)}
-                  ></i>
-                </div>
-              </div>
-            ))
-          ) : (
-            <small className="empty-list">Todo list is empty </small>
-          )}
-        </ul>
-        <div className="footer">
-          <div>Total Todos : {todos.length}</div>
-          <div>
-            Completed : {todos.filter((item) => item?.isCompleted).length}
-          </div>
-          <div>
-            Pending : {todos.filter((item) => !item?.isCompleted).length}
-          </div>
-        </div>
+        <TodoHeader day={day} month={month} />
+        <TodoForm
+          task={task}
+          handleInput={handleInput}
+          handleFormSubmit={handleFormSubmit}
+        />
+        <TodoList
+          todos={todos}
+          dragStart={dragStart}
+          dragEnter={dragEnter}
+          dropItem={dropItem}
+          handleChangeChecked={handleChangeChecked}
+          handleDelete={handleDelete}
+        />
+        <TodoFooter todos={todos} />
       </div>
     </div>
   );
